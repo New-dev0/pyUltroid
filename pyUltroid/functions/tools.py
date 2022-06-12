@@ -58,11 +58,13 @@ except ImportError:
 async def get_ofox(codename):
     ofox_baseurl = "https://api.orangefox.download/v3/"
     releases = await async_searcher(
-        ofox_baseurl + "releases?codename=" + codename, re_json=True
+        f"{ofox_baseurl}releases?codename={codename}", re_json=True
     )
+
     device = await async_searcher(
-        ofox_baseurl + "devices/get?codename=" + codename, re_json=True
+        f"{ofox_baseurl}devices/get?codename={codename}", re_json=True
     )
+
     return device, releases
 
 
@@ -217,7 +219,7 @@ def get_msg_button(texts: str):
             btn.append([[text, url]])
 
     txt = texts
-    for z in re.findall("\\[.+?\\|.+?\\]", texts):
+    for z in re.findall("\\[.+?\\|.+?\\]", txt):
         txt = txt.replace(z, "")
 
     return txt.strip(), btn
@@ -271,7 +273,7 @@ _webupload_cache = {}
 
 
 async def webuploader(chat_id: int, msg_id: int, uploader: str):
-    file = _webupload_cache[int(chat_id)][int(msg_id)]
+    file = _webupload_cache[chat_id][msg_id]
     sites = {
         "anonfiles": {"url": "https://api.anonfiles.com/upload", "json": True},
         "siasky": {"url": "https://siasky.net/skynet/skyfile", "json": True},
@@ -297,15 +299,14 @@ async def webuploader(chat_id: int, msg_id: int, uploader: str):
             except KeyError:
                 link = status["data"]["file"]["url"]["short"]
             return link
-    del _webupload_cache[int(chat_id)][int(msg_id)]
+    del _webupload_cache[chat_id][msg_id]
     return status
 
 
 def get_all_files(path):
     filelist = []
     for root, dirs, files in os.walk(path):
-        for file in files:
-            filelist.append(os.path.join(root, file))
+        filelist.extend(os.path.join(root, file) for file in files)
     return sorted(filelist)
 
 
@@ -320,8 +321,7 @@ def text_set(text):
                 lines.append(line)
             else:
                 k = len(line) // 55
-                for z in range(1, k + 2):
-                    lines.append(line[((z - 1) * 55) : (z * 55)])
+                lines.extend(line[((z - 1) * 55) : (z * 55)] for z in range(1, k + 2))
     return lines[:25]
 
 
@@ -447,14 +447,14 @@ def stdr(seconds):
     minutes, seconds = divmod(seconds, 60)
     hours, minutes = divmod(minutes, 60)
     if len(str(minutes)) == 1:
-        minutes = "0" + str(minutes)
+        minutes = f"0{str(minutes)}"
     if len(str(hours)) == 1:
-        hours = "0" + str(hours)
+        hours = f"0{str(hours)}"
     if len(str(seconds)) == 1:
-        seconds = "0" + str(seconds)
+        seconds = f"0{str(seconds)}"
     return (
-        ((str(hours) + ":") if hours else "00:")
-        + ((str(minutes) + ":") if minutes else "00:")
+        (f"{str(hours)}:" if hours else "00:")
+        + (f"{str(minutes)}:" if minutes else "00:")
         + ((str(seconds)) if seconds else "")
     )
 
@@ -556,9 +556,9 @@ async def Carbon(
     con = await async_searcher(base_url, post=True, json=kwargs, re_content=True)
     if not download:
         file = BytesIO(con)
-        file.name = file_name + ".jpg"
+        file.name = f"{file_name}.jpg"
     else:
-        file = file_name + ".jpg"
+        file = f"{file_name}.jpg"
         open(file_name, "wb").write(con)
     return file
 
@@ -810,13 +810,12 @@ def safe_load(file, *args, **kwargs):
             spli = line.split(":", maxsplit=1)
             key = spli[0].strip()
             value = _get_value(spli[1])
-            out.update({key: value or []})
+            out[key] = value or []
         elif "-" in line:
             spli = line.split("-", maxsplit=1)
             where = out[list(out.keys())[-1]]
-            if isinstance(where, list):
-                value = _get_value(spli[1])
-                if value:
+            if value := _get_value(spli[1]):
+                if isinstance(where, list):
                     where.append(value)
     return out
 

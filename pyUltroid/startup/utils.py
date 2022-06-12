@@ -23,9 +23,9 @@ def load_addons(plugin_name):
     from ..configs import Var
     from ..dB._core import HELP
 
-    path = "addons/" + plugin_name
+    path = f"addons/{plugin_name}"
     name = path.replace("/", ".").replace("\\", ".")
-    spec = util.spec_from_file_location(name, path + ".py")
+    spec = util.spec_from_file_location(name, f"{path}.py")
     mod = util.module_from_spec(spec)
     mod.LOG_CHANNEL = udB.get_key("LOG_CHANNEL")
     mod.udB = udB
@@ -78,7 +78,7 @@ def load_addons(plugin_name):
     modules["fridaybot.Config"] = xxx
     modules["userbot.uniborgConfig"] = xxx
     spec.loader.exec_module(mod)
-    modules["addons." + plugin_name] = mod
+    modules[f"addons.{plugin_name}"] = mod
     doc = (
         modules[f"addons.{plugin_name}"].__doc__.format(i=HNDLR)
         if modules[f"addons.{plugin_name}"].__doc__

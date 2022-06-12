@@ -68,12 +68,10 @@ def startup_stuff():
         if not os.path.isdir(x):
             os.mkdir(x)
 
-    CT = udB.get_key("CUSTOM_THUMBNAIL")
-    if CT:
+    if CT := udB.get_key("CUSTOM_THUMBNAIL"):
         urlretrieve(CT, "resources/extras/ultroid.jpg")
 
-    GT = udB.get_key("GDRIVE_AUTH_TOKEN")
-    if GT:
+    if GT := udB.get_key("GDRIVE_AUTH_TOKEN"):
         with open("resources/auth/gdrive_creds.json", "w") as t_file:
             t_file.write(GT)
 
@@ -112,9 +110,9 @@ async def autobot():
     who = ultroid_bot.me
     name = who.first_name + "'s Assistant Bot"
     if who.username:
-        username = who.username + "_bot"
+        username = f"{who.username}_bot"
     else:
-        username = "ultroid_" + (str(who.id))[5:] + "_bot"
+        username = f"ultroid_{(str(who.id))[5:]}_bot"
     bf = "@BotFather"
     await ultroid_bot(UnblockRequest(bf))
     await ultroid_bot.send_message(bf, "/cancel")
@@ -149,7 +147,7 @@ async def autobot():
     await ultroid_bot.send_read_acknowledge("botfather")
     if isdone.startswith("Sorry,"):
         ran = randint(1, 100)
-        username = "ultroid_" + (str(who.id))[6:] + str(ran) + "_bot"
+        username = f"ultroid_{(str(who.id))[6:]}{str(ran)}_bot"
         await ultroid_bot.send_message(bf, username)
         await asyncio.sleep(1)
         nowdone = (await ultroid_bot.get_messages(bf, limit=1))[0].text
@@ -302,10 +300,12 @@ async def customize():
             return
         LOGS.info("Customising Ur Assistant Bot in @BOTFATHER")
         UL = f"@{asst.me.username}"
-        if not ultroid_bot.me.username:
-            sir = ultroid_bot.me.first_name
-        else:
-            sir = f"@{ultroid_bot.me.username}"
+        sir = (
+            f"@{ultroid_bot.me.username}"
+            if ultroid_bot.me.username
+            else ultroid_bot.me.first_name
+        )
+
         file = random.choice(
             [
                 "https://telegra.ph/file/92cd6dbd34b0d1d73a0da.jpg",
@@ -410,12 +410,11 @@ async def ready():
     else:
         MSG = f"**Ultroid has been deployed!**\n➖➖➖➖➖➖➖➖➖➖\n**UserMode**: {inline_mention(ultroid_bot.me)}\n**Assistant**: @{asst.me.username}\n➖➖➖➖➖➖➖➖➖➖\n**Support**: @TeamUltroid\n➖➖➖➖➖➖➖➖➖➖"
         BTTS, PHOTO = None, None
-        prev_spam = udB.get_key("LAST_UPDATE_LOG_SPAM")
-        if prev_spam:
+        if prev_spam := udB.get_key("LAST_UPDATE_LOG_SPAM"):
             try:
                 await ultroid_bot.delete_messages(chat_id, int(prev_spam))
             except Exception as E:
-                LOGS.info("Error while Deleting Previous Update Message :" + str(E))
+                LOGS.info(f"Error while Deleting Previous Update Message :{str(E)}")
         if await updater():
             BTTS = Button.inline("Update Available", "updtavail")
 
