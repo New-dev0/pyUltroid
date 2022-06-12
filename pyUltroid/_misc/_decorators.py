@@ -58,7 +58,7 @@ def compile_pattern(data, hndlr):
         data = data[1:]
     if hndlr in [" ", "NO_HNDLR"]:
         # No Hndlr Feature
-        return re.compile("^" + data)
+        return re.compile(f"^{data}")
     return re.compile("\\" + hndlr + data)
 
 
@@ -82,13 +82,14 @@ def ultroid_cmd(
                     return
                 if fullsudo and ult.sender_id not in SUDO_M.fullsudos:
                     return await eod(ult, "`Full Sudo User Required...`", time=15)
-            if hasattr(chat, "title"):
-                if (
-                    "#noub" in chat.title.lower()
-                    and not (chat.admin_rights or chat.creator)
-                    and not (ult.sender_id in DEVLIST)
-                ):
-                    return
+            if (
+                hasattr(chat, "title")
+                and "#noub" in chat.title.lower()
+                and not chat.admin_rights
+                and not chat.creator
+                and ult.sender_id not in DEVLIST
+            ):
+                return
             if admins_only:
                 if ult.is_private:
                     return await eod(ult, "`Use this in group/channel.`")
@@ -163,7 +164,7 @@ def ultroid_cmd(
                 ftext = (
                     "**Ultroid Client Error:** `Forward this to` @UltroidSupport\n\n"
                 )
-                ftext += "**Py-Ultroid Version:** `" + str(pyver)
+                ftext += f"**Py-Ultroid Version:** `{str(pyver)}"
                 ftext += "`\n**Ultroid Version:** `" + str(ult_ver)
                 ftext += "`\n**Telethon Version:** `" + str(telever)
                 ftext += f"`\n**Hosted At:** `{HOSTED_ON}`\n\n"
@@ -184,7 +185,7 @@ def ultroid_cmd(
                 stdout, stderr = await bash('git log --pretty=format:"%an: %s" -5')
                 result = stdout + (stderr or "")
 
-                ftext += result + "`"
+                ftext += f"{result}`"
 
                 if len(ftext) > 4096:
                     with BytesIO(ftext.encode()) as file:
